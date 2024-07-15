@@ -1,0 +1,58 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  annotations:
+    tekton.dev/categories: CLI
+    tekton.dev/displayName: Jfrog CLI
+    tekton.dev/pipelines.minVersion: 0.17.0
+    tekton.dev/platforms: linux/amd64,linux/s390x,linux/ppc64le
+    tekton.dev/tags: cli
+  creationTimestamp: "2024-03-20T05:54:25Z"
+  labels:
+    app.kubernetes.io/version: "0.6"
+  name: jfrog-cli
+  namespace: default
+  resourceVersion: "14751909"
+spec:
+  params:
+  - default: repo.cicc.com.cn/fi-public-docker-local/jfrog/jfrogcli:2.2.0
+    description: tkn CLI container image to run this task
+    name: JFROG_IMAGE
+    type: string
+  - name: workbase
+    type: string
+  - default: u
+    description: tkn CLI script to execute
+    name: ACTS
+    type: string
+  - description: jfrog CLI arguments to run
+    name: TARGET-REPO
+    type: string
+  - name: version
+    type: string
+  steps:
+  - computeResources: {}
+    env:
+    - name: CI
+      value: "true"
+    image: $(params.JFROG_IMAGE)
+    name: jfrog
+    script: |
+      #!/bin/bash
+      set -x
+      cd $(params.workbase)
+      tarname=$(ls *.gz)
+      for i in $tarname
+      do
+        jfrog rt u ${i}  fi-fiops-generic-local/lizardcd/$(params.version)
+      done
+    securityContext:
+      runAsUser: 0
+    workingDir: $(workspaces.source.path)
+  workspaces:
+  - name: source
+  - description: Includes a docker `config.json`
+    mountPath: ~/.jfrog/
+    name: jfrogconfig
+    optional: true
+

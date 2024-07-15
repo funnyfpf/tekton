@@ -1,0 +1,97 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: lizardcd-agent
+  namespace: default
+  labels:
+    app: lizardcd-agent
+  annotations:
+    deployment.kubernetes.io/revision: '30'
+    kubesphere.io/creator: hongyuxuan
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lizardcd-agent
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: lizardcd-agent
+      annotations:
+        kubesphere.io/restartedAt: '2024-01-16T02:45:18.632Z'
+    spec:
+      volumes:
+        - name: host-time
+          hostPath:
+            path: /etc/localtime
+            type: ''
+      containers:
+        - name: k8s-container
+          image: 'repo.cicc.com.cn/fi-public-docker-local/lizardcd/lizardcd-agent:v0.0.1'
+          args:
+            - '--consul.host'
+            - '10.50.89.17:8086'
+            - '--consul.key' 
+            - 'lizardcd-agent.*.tektonk8s'
+          ports:
+            - name: tcp-5017
+              containerPort: 5017
+              protocol: TCP
+            - name: tcp-15017
+              containerPort: 15017
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 200Mi
+            requests:
+              cpu: 50m
+              memory: 100Mi
+          volumeMounts:
+            - name: host-time
+              readOnly: true
+              mountPath: /etc/localtime
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          imagePullPolicy: Always
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 30
+      dnsPolicy: ClusterFirst
+      serviceAccountName: default
+      serviceAccount: default
+      securityContext: {}
+      affinity: {}
+      schedulerName: default-scheduler
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  revisionHistoryLimit: 10
+  progressDeadlineSeconds: 600
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: lizardcd-agent
+  namespace: default
+  labels:
+    app: lizardcd-agent
+  annotations:
+    kubesphere.io/creator: hongyuxuan
+spec:
+  ports:
+    - name: http-5017
+      protocol: TCP
+      port: 5017
+      targetPort: 5017
+    - name: http-15017
+      protocol: TCP
+      port: 15017
+      targetPort: 15017
+  selector:
+    app: lizardcd-agent
+  type: NodePort
+  sessionAffinity: None
+---

@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: lizardcd-pipeline-eventlistener
+  name: el-lizardcd-eventlistener
+  namespace: default
+  ownerReferences:
+  - apiVersion: triggers.tekton.dev/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: EventListener
+    name: lizardcd-pipeline-eventlistener
+    uid: b2d87bf8-6a5b-4cc6-b823-64b1c8ceb534
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http-listener
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: http-metrics
+    port: 9000
+    protocol: TCP
+    targetPort: 9000
+  selector:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: lizardcd-pipeline-eventlistener
+  sessionAffinity: None
+  type: NodePort

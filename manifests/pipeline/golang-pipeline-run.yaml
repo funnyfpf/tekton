@@ -1,0 +1,40 @@
+apiVersion: tekton.dev/v1beta1
+kind: PipelineRun
+metadata:
+ generateName: golang-pipeline-run-
+spec:
+  pipelineRef:
+    name: golang-pipeline
+  workspaces:
+  #  - name: maven-settings
+  #    configMap:
+  #      name: custom-maven-settings
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteMany
+          storageClassName: nfs-client
+          resources:
+            requests:
+              storage: 1Gi
+    - name: dockerhub-auth
+      secret:
+        secretName: docker-credential
+    - name: git-credentials
+      secret:
+        secretName: git-credentials
+ # taskRunSpecs:
+ #   - pipelineTaskName: yq-replace
+ #     taskPodTemplate:
+ #       securityContext:
+ #         runAsUser: 0
+  params:
+    - name: repo-url
+      value: git@gitlab.cicconline.com:hongyuxuan/godemo.git
+    - name: revision
+      value: dev
+    - name: workbase
+      value: ./
+    - name: packages
+      value: ofadevops

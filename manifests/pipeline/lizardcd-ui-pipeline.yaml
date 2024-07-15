@@ -1,0 +1,67 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  annotations:
+    fiops/author: fanpengfei
+  creationTimestamp: "2024-03-15T09:05:16Z"
+  name: lizardcd-ui-pipeline
+  namespace: default
+  resourceVersion: "14773065"
+spec:
+  params:
+  - name: revision
+    type: string
+  - default: git@github.com:funnyfpf/lizardcd-app.git
+    name: repo-url
+    type: string
+  tasks:
+  - name: git-clone
+    params:
+    - name: url
+      value: $(params.repo-url)
+    - name: subdirectory
+      value: ""
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: $(params.revision)
+    taskRef:
+      kind: Task
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+    - name: ssh-directory
+      workspace: git-credentials
+  - name: build
+    params:
+    - name: PATH_CONTEXT
+      value: ui
+    runAfter:
+    - git-clone
+    taskRef:
+      kind: Task
+      name: npm
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: docker-build
+    params:
+    - name: IMAGE
+      value: registry.cn-beijing.aliyuncs.com/lizardcd/lizardcd-ui:$(tasks.build.results.version)
+    - name: CONTEXT
+      value: ui
+    runAfter:
+    - build
+    taskRef:
+      kind: Task
+      name: kaniko
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    - name: dockerconfig
+      workspace: dockerhub-auth
+  workspaces:
+  - name: shared-workspace
+  - name: dockerhub-auth
+  - name: git-credentials

@@ -1,0 +1,40 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: trigger-rd-pipeline-eventlistener
+spec:
+  serviceAccountName: tekton-triggers-gitlab-sa
+  triggers:
+    - name: k8s-match
+      interceptors:
+        - ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: body.commits.map(commit, commit.added + commit.modified + commit.removed).exists(files, true in files.map(file, matches(file, "^k8s"))) 
+          - name: "overlays"
+            value: 
+              - key: "app_name"
+                expression: body.object_kind.replace("push","fiops-k8s")
+      bindings:
+        - kind: TriggerBinding
+          ref: fi-trigger-bingding
+      template:
+        ref: trigger-rd-pipeline-template
+    - name: bkcmdb-match
+      interceptors:
+        - ref:
+            name: "cel"
+          params:
+          - name: "filter"
+            value: body.commits.map(commit, commit.added + commit.modified + commit.removed).exists(files, true in files.map(file, matches(file, "^bkcmdb"))) 
+          - name: "overlays"
+            value: 
+              - key: "app_name"
+                expression: body.object_kind.replace("push","fiops-bkcmdb")
+      bindings:
+        - kind: TriggerBinding
+          ref: fi-trigger-bingding
+      template:
+        ref: trigger-rd-pipeline-template
+

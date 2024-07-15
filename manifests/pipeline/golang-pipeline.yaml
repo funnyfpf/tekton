@@ -1,0 +1,81 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: golang-pipeline
+spec:
+  workspaces:
+    - name: shared-workspace    # 共享数据目录
+#    - name: maven-settings      # maven 配置文件
+    - name: dockerhub-auth      # 镜像仓库秘钥
+    - name: git-credentials     # git ssh认证
+  params:
+    - name: repo-url
+      type: string
+    - name: revision
+      type: string
+    - name: workbase
+      type: string
+    - name: packages
+      type: string
+  tasks:
+    - name: fetch-repository
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+        - name: ssh-directory
+          workspace: git-credentials
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: subdirectory
+          value: ""
+        - name: deleteExisting
+          value: "true"
+        - name: revision
+          value: $(params.revision)
+    - name: go-build
+      taskRef:
+        name: golang-build
+      runAfter:
+        - fetch-repository
+      params:
+        - name: workbase
+          value: $(params.workbase)
+        - name: packages
+          value: $(params.packages)
+        - name: flags
+          value: -o       
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    - name: docker-build
+      taskRef:
+        name: kaniko
+      runAfter:
+        - go-build
+      params:
+        - name: IMAGE
+          value: repo.cicc.com.cn/fi-fiops-docker-local/godemo/dev:$(tasks.go-build.results.version)-$(tasks.fetch-repository.results.committer-date)-$(tasks.fetch-repository.results.commit)
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+        - name: dockerconfig
+          workspace: dockerhub-auth
+#    - name: yq-replace
+#      taskRef:
+#        name: yq
+#      runAfter:
+#        - docker-build
+#      workspaces:
+#        - name: source
+#          workspace: shared-workspace
+#      params:
+#        - name: SCRIPT
+#          value: |
+#            for var in "./deploy/ficc-test.yaml"
+#              do
+#                  /usr/bin/yq eval -i '.spec.template.spec.containers[0].image="$(tasks.docker-build.results.IMAGE_URL)"' $var
+#              done
+

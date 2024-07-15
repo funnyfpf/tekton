@@ -1,0 +1,11 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: fiops-deploy-pipeline-eventlistener
+spec:
+  serviceAccountName: tekton-triggers-gitlab-sa
+  triggers:
+    - bindings:
+        - ref: fi-trigger-bingding
+      template:
+        ref: fiops-deploy-pipeline-template

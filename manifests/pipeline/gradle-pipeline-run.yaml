@@ -1,0 +1,52 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: gradle-pipeline-run-
+spec:
+  pipelineRef:
+    name: gradle-pipeline
+  workspaces:
+  #  - name: maven-settings
+  #    configMap:
+  #      name: custom-maven-settings
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteMany
+          storageClassName: nfs-client
+          resources:
+            requests:
+              storage: 1Gi
+    - name: dockerhub-auth
+      secret:
+        secretName: docker-credential
+    - name: git-credentials
+      secret:
+        secretName: git-credentials
+ # taskRunSpecs:
+ #   - pipelineTaskName: yq-replace
+ #     taskPodTemplate:
+ #       securityContext:
+ #         runAsUser: 0
+  params:
+    - name: repo-url
+      value: git@gitlab.cicconline.com:xficc/taichi/ofa.git
+    - name: revision
+      value: sprint54
+    - name: workbase
+      value: "service/auth/auth-http-server"
+    - name: context
+      value: "service/auth/auth-http-server"
+   
+  # taskRunSpecs:
+  #   - pipelineTaskName: go-build
+  #     PodTemplate:
+  #       volumes:
+  #         - name: host-time
+  #           hostPath:
+  #             path: /etc/localtime
+  #       container:
+  #         volumeMounts:
+  #           - name: host-time
+  #             mountPath: /etc/localtime

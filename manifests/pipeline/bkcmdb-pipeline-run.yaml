@@ -1,0 +1,29 @@
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  generateName: k8s-pipeline-run-
+spec:
+  pipelineRef:
+    name: test-k8s-pipeline
+  workspaces:
+    - name: shared-workspace
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+          - ReadWriteMany
+          storageClassName: nfs-client
+          resources:
+            requests:
+              storage: 1Gi
+    - name: dockerhub-auth
+      secret:
+        secretName: docker-credential
+    - name: git-credentials
+      secret:
+        secretName: git-credentials
+    - name: kubeconfig
+      configMap:
+        name: kubeconfig
+  params:
+    - name: revision
+      value: v4.3

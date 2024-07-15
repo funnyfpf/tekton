@@ -1,0 +1,84 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  annotations:
+    fiops/author: fanpengfei
+  name: test-k8s-pipeline
+  namespace: default
+spec:
+  params:
+  - name: revision
+    type: string
+  - default: git@gitlab.cicconline.com:xficc/devops/fiops.git
+    name: repo-url
+    type: string
+  tasks:
+  - name: git-clone
+    params:
+    - name: url
+      value: $(params.repo-url)
+    - name: subdirectory
+      value: ""
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: $(params.revision)
+    taskRef:
+      kind: Task
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+    - name: ssh-directory
+      workspace: git-credentials
+  - name: build
+    params:
+    - name: workbase
+      value: k8s/api
+    - name: packages
+      value: fiops-k8s
+    - name: flags
+      value: -o
+    runAfter:
+    - git-clone
+    taskRef:
+      kind: Task
+      name: go1.19-build
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: docker-build
+    params:
+    - name: IMAGE
+      value: repo.cicc.com.cn/fi-fiops-docker-local/devops/k8s:$(tasks.build.results.version)-$(tasks.build.results.timestamp)-$(tasks.git-clone.results.commit)
+    - name: CONTEXT
+      value: k8s/api
+    runAfter:
+    - build
+    taskRef:
+      kind: Task
+      name: kaniko
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    - name: dockerconfig
+      workspace: dockerhub-auth
+  - name: deploy
+    params:
+    - name: image-url
+      value: $(tasks.docker-build.results.IMAGE_URL)
+    - name: app-name
+      value: k8s
+    runAfter:
+    - docker-build
+    taskRef:
+      kind: Task
+      name: kubernetes-actions
+    workspaces:
+    - name: kubeconfig-dir
+      workspace: kubeconfig
+  workspaces:
+  - name: shared-workspace
+  - name: dockerhub-auth
+  - name: git-credentials
+  - name: kubeconfig

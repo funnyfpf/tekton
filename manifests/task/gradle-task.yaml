@@ -1,0 +1,83 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: gradle
+  labels:
+    app.kubernetes.io/version: "0.4"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.17.0"
+    tekton.dev/displayName: Gradle
+    tekton.dev/categories: Build Tools
+    tekton.dev/tags: build-tool
+    tekton.dev/platforms: "linux/amd64,linux/s390x,linux/ppc64le"
+spec:
+  description: >-
+    This Task can be used to run a Gradle build.
+
+  workspaces:
+    - name: source
+      description: The workspace consisting of the gradle project.
+    - name: gradle-config
+      description: The workspace consisting of the custom gradle properties provided by the user.
+      optional: true
+  params:
+    - name: GRADLE_IMAGE
+      description: Gradle base image.
+      type: string
+      default: repo.cicc.com.cn/public-docker-virtual/gradle:7.4.2-jdk11
+    - name: PROJECT_DIR
+      description: The directory containing build.gradle
+      type: string
+      default: "."
+    - name: TASKS
+      description: 'The gradle tasks to run (default: build)'
+      type: array
+      default:
+        - clean
+        - build
+        - '-x'
+        - test
+        - '--refresh-dependencies'
+        - '--build-cache'
+  results:
+    - name: timestamp
+    - name: version
+  steps:
+    - name: gradle-tasks
+      image: $(params.GRADLE_IMAGE)
+      env:
+        - name: GRADLE_USER_HOME
+          value: "/home/gradle"
+      workingDir: $(workspaces.source.path)/$(params.PROJECT_DIR)
+      args:
+        - "$(params.TASKS)"
+      script: |
+        #!/usr/bin/env bash
+
+        if [[ "$(workspaces.gradle-config.bound)" == "true" ]]; then
+          echo "gradle-config workspace is bound"
+          if [[ -f $(workspaces.gradle-config.path)/gradle.properties ]]; then
+            echo "copying gradle.properties to /home/gradle"
+            cp "$(workspaces.gradle-config.path)/gradle.properties" /home/gradle
+          fi
+        fi
+        chmod +x $(workspaces.source.path)/gradlew
+        cmd="$(workspaces.source.path)/gradlew $*"
+        echo "Running gradle task with command below"
+        echo "$cmd"
+        eval "$cmd"
+        VERSION=$(grep 'version = ' $(workspaces.source.path)/build.gradle.kts | awk -F '"' '{print $2}')
+        timestamp=$(date +%Y%m%d%H%M%S)
+        printf "%s" "${timestamp}" > "$(results.timestamp.path)"
+        printf "%s" "${VERSION}" > "$(results.version.path)"
+      volumeMounts:
+        - mountPath: /home/gradle
+          name: empty-dir
+        - name: host-time
+          mountPath: /etc/localtime
+  volumes:
+    - name: empty-dir
+      emptyDir: {}
+    - name: host-time
+      hostPath:
+        path: /etc/localtime

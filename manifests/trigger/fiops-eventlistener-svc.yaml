@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: fiops-pipeline-eventlistener
+  name: el-fiops-eventlistener
+  namespace: default
+  ownerReferences:
+  - apiVersion: triggers.tekton.dev/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: EventListener
+    name: fiops-pipeline-eventlistener
+    uid: d2125195-950e-45e6-a1c6-e1e4faefe314
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http-listener
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: http-metrics
+    port: 9000
+    protocol: TCP
+    targetPort: 9000
+  selector:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: fiops-pipeline-eventlistener
+  sessionAffinity: None
+  type: NodePort

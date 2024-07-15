@@ -1,0 +1,14 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: fiops-trigger-binding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.ref)
+    - name: namespace
+      value: default
+    - name: gitrepositoryurl
+      value: $(body.git_ssh_url)
+    - name: application
+      value: $(body.app_name)

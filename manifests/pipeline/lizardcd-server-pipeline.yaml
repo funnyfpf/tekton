@@ -1,0 +1,80 @@
+apiVersion: v1
+items:
+- apiVersion: tekton.dev/v1
+  kind: Pipeline
+  metadata:
+    annotations:
+      fiops/author: fanpengfei
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"tekton.dev/v1","kind":"Pipeline","metadata":{"annotations":{"fiops/author":"fanpengfei"},"creationTimestamp":"2024-03-13T01:20:04Z","name":"lizardcd-server-pipeline","namespace":"default","resourceVersion":"27956068"},"spec":{"params":[{"name":"revision","type":"string"},{"default":"git@github.com:hongyuxuan/lizardcd.git","name":"repo-url","type":"string"}],"tasks":[{"name":"git-clone","params":[{"name":"url","value":"$(params.repo-url)"},{"name":"subdirectory","value":""},{"name":"deleteExisting","value":"true"},{"name":"revision","value":"$(params.revision)"}],"taskRef":{"kind":"Task","name":"git-clone"},"workspaces":[{"name":"output","workspace":"shared-workspace"},{"name":"ssh-directory","workspace":"git-credentials"}]},{"name":"build","params":[{"name":"workbase","value":"server"},{"name":"packages","value":"lizardcd-server"},{"name":"flags","value":"-o"}],"runAfter":["git-clone"],"taskRef":{"kind":"Task","name":"go1.19-build-lizardcd"},"workspaces":[{"name":"source","workspace":"shared-workspace"}]},{"name":"docker-build","params":[{"name":"IMAGE","value":"registry.cn-beijing.aliyuncs.com/lizardcd/lizardcd-server:$(tasks.build.results.version)"},{"name":"CONTEXT","value":"server"}],"runAfter":["build"],"taskRef":{"kind":"Task","name":"kaniko"},"workspaces":[{"name":"source","workspace":"shared-workspace"},{"name":"dockerconfig","workspace":"dockerhub-auth"}]}],"workspaces":[{"name":"shared-workspace"},{"name":"dockerhub-auth"},{"name":"git-credentials"}]}}
+    creationTimestamp: "2024-07-05T01:56:03Z"
+    generation: 1
+    name: lizardcd-server-pipeline
+    namespace: default
+    resourceVersion: "2133500"
+    uid: 96e2e573-ef9e-40d1-a52d-f4d0d8771023
+  spec:
+    params:
+    - name: revision
+      type: string
+    - default: git@github.com:funnyfpf/lizardcd-app.git
+      name: repo-url
+      type: string
+    tasks:
+    - name: git-clone
+      params:
+      - name: url
+        value: $(params.repo-url)
+      - name: subdirectory
+        value: ""
+      - name: deleteExisting
+        value: "true"
+      - name: revision
+        value: $(params.revision)
+      taskRef:
+        kind: Task
+        name: git-clone
+      workspaces:
+      - name: output
+        workspace: shared-workspace
+      - name: ssh-directory
+        workspace: git-credentials
+    - name: build
+      params:
+      - name: workbase
+        value: server
+      - name: packages
+        value: lizardcd-server
+      - name: flags
+        value: -o
+      runAfter:
+      - git-clone
+      taskRef:
+        kind: Task
+        name: go1.19-build-lizardcd
+      workspaces:
+      - name: source
+        workspace: shared-workspace
+    - name: docker-build
+      params:
+      - name: IMAGE
+        value: registry.cn-beijing.aliyuncs.com/lizardcd/lizardcd-server:$(tasks.build.results.version)
+      - name: CONTEXT
+        value: server
+      runAfter:
+      - build
+      taskRef:
+        kind: Task
+        name: kaniko
+      workspaces:
+      - name: source
+        workspace: shared-workspace
+      - name: dockerconfig
+        workspace: dockerhub-auth
+    workspaces:
+    - name: shared-workspace
+    - name: dockerhub-auth
+    - name: git-credentials
+kind: List
+metadata:
+  resourceVersion: ""

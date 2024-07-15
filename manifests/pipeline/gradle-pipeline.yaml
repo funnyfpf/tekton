@@ -1,0 +1,118 @@
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  annotations:
+    fiops/author: fanpengfei
+  creationTimestamp: "2024-02-22T07:19:52Z"
+  name: gradle-pipeline
+  namespace: default
+  resourceVersion: "5045911"
+spec:
+  finally:
+  - name: display-results
+    taskSpec:
+      metadata: {}
+      spec: null
+      steps:
+      - computeResources: {}
+        image: repo.cicc.com.cn/public-docker-virtual/bash:5.1.4@sha256:b208215a4655538be652b2769d82e576bc4d0a2bb132144c060efc5be8c3f5d6
+        name: print
+        script: |
+          #!/usr/bin/env bash
+          set -e
+          echo $(context.pipelineRun.name)
+  params:
+  - name: repo-url
+    type: string
+  - name: revision
+    type: string
+  - name: workbase
+    type: string
+  - name: context
+    type: string
+  tasks:
+  - name: git-clone
+    params:
+    - name: url
+      value: $(params.repo-url)
+    - name: subdirectory
+      value: ""
+    - name: deleteExisting
+      value: "true"
+    - name: revision
+      value: $(params.revision)
+    taskRef:
+      kind: Task
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: shared-workspace
+    - name: ssh-directory
+      workspace: git-credentials
+  - name: gradle-test
+    params:
+    - name: PROJECT_DIR
+      value: $(params.workbase)
+    runAfter:
+    - git-clone
+    taskRef:
+      kind: Task
+      name: gradle-test
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: sonar-scanner
+    params:
+    - name: SONAR_HOST_URL
+      value: http://sonarqube.fiofa-ofa-bdev.cicc.io
+    - name: SONAR_PROJECT_KEY
+      value: gradle
+    - name: SONAR_TOKEN
+      value: sqp_999a3cba703c1f4fa84ce37d3b0f399c38a62409
+    - name: SONAR_ORGANIZATION
+      value: ofa
+    # - name: SONAR_LOGIN_KEY
+    #   value: user
+    # - name: SONAR_PASSWORD_KEY
+    #   value: "123456"
+    runAfter:
+    - gradle-test
+    taskRef:
+      kind: Task
+      name: sonarqube-scanner
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: gradle-build
+    params:
+    - name: PROJECT_DIR
+      value: $(params.workbase)
+    runAfter:
+    - sonar-scanner
+    taskRef:
+      kind: Task
+      name: gradle
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+  - name: docker-build
+    params:
+    - name: IMAGE
+      value: repo.cicc.com.cn/fi-fiops-docker-local/devops/auth-http-server:$(tasks.gradle-build.results.version)-$(tasks.gradle-build.results.timestamp)-$(tasks.git-clone.results.commit)
+    - name: CONTEXT
+      value: $(params.context)
+    runAfter:
+    - gradle-build
+    taskRef:
+      kind: Task
+      name: kaniko
+    workspaces:
+    - name: source
+      workspace: shared-workspace
+    - name: dockerconfig
+      workspace: dockerhub-auth
+  workspaces:
+  - name: shared-workspace
+  - name: dockerhub-auth
+  - name: git-credentials
+

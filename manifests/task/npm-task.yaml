@@ -1,0 +1,53 @@
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: npm
+  labels:
+    app.kubernetes.io/version: "0.1"
+  annotations:
+    tekton.dev/pipelines.minVersion: "0.17.0"
+    tekton.dev/categories: Build Tools
+    tekton.dev/tags: build-tool
+    tekton.dev/platforms: "linux/amd64,linux/s390x,linux/ppc64le"
+spec:
+  description: >-
+    This task can be used to run npm goals on a project.
+
+    This task can be used to run npm goals on a project
+    where package.json is present and has some pre-defined
+    npm scripts.
+  workspaces:
+    - name: source
+  params:
+    - name: PATH_CONTEXT
+      type: string
+      default: "."
+      description: The path where package.json of the project is defined.
+    - name: ARGS
+      type: array
+      default: ["version"]
+      description: The npm goals you want to run.
+    - name: IMAGE
+      type: string
+      default: "registry.cn-beijing.aliyuncs.com/fpf_devops/node:21-alpine"
+      description: The node image you want to use.
+  results:
+  - name: version
+    type: string
+  - name: timestamp
+    type: string
+  steps:
+    - name: npm-run
+      image: $(params.IMAGE)
+      script: |
+        npm  install
+        npm run build 
+        set -e
+        IMAGE_VERSION="$(cat ../VERSION)"
+        printf "%s" "${IMAGE_VERSION}" > "$(results.version.path)"
+        timestamp=$(date +%Y%m%d%H%M%S)
+        printf "%s" "${timestamp}" > "$(results.timestamp.path)"
+      workingDir: $(workspaces.source.path)/$(params.PATH_CONTEXT)
+      env:
+        - name: CI
+          value: "true"

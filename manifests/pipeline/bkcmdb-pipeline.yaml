@@ -1,0 +1,109 @@
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: fiops-bkcmdb-pipeline
+spec:
+  finally:
+    - name: display-results
+      # workspaces:
+      #   - name: source
+      #     workspace: shared-workspace
+      when:
+        - input: $(tasks.status)
+          operator: in
+          values: ["Succeeded"]
+      taskSpec:
+        # workspaces:
+        #   - name: source
+        steps:
+          - name: print
+            image: repo.cicc.com.cn/public-docker-virtual/bash:5.1.4@sha256:b208215a4655538be652b2769d82e576bc4d0a2bb132144c060efc5be8c3f5d6
+            script: |
+              #!/usr/bin/env bash
+              set -e
+              echo "$(context.pipelineRun.name)  流水线已成功执行"
+  workspaces:
+    - name: shared-workspace    # 共享数据目录
+    - name: dockerhub-auth      # 镜像仓库秘钥
+    - name: git-credentials     # git ssh认证
+  params:
+    - name: revision
+      type: string
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+        - name: ssh-directory
+          workspace: git-credentials
+      params:
+        - name: url
+          value: "git@gitlab.cicconline.com:xficc/devops/fiops.git"
+        - name: subdirectory
+          value: ""
+        - name: deleteExisting
+          value: "true"
+        - name: revision
+          value: $(params.revision)
+    - name: sonar-scanner
+      taskRef:
+        name: sonarqube-scanner
+      runAfter:
+        - git-clone
+      params:
+        - name: SONAR_HOST_URL
+          value: http://sonarqube.fiofa-ofa-bdev.cicc.io
+        - name: SONAR_PROJECT_KEY
+          value: ofa-go
+        - name: SONAR_TOKEN
+          value: "sqp_66086c722e684d1d83c07a20e576501e04a21fd1"
+        - name: SONAR_ORGANIZATION
+          value: ofa
+        - name: SONAR_LOGIN_KEY
+          value: user
+        - name: SONAR_PASSWORD_KEY
+          value: 123456
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    - name: build
+      taskRef:
+        name: go1.19-build
+      runAfter:
+        - sonar-scanner
+      params:
+        - name: workbase
+          value: "bkcmdb/api"
+        - name: packages
+          value: "fiops-bkcmdb"
+        - name: flags
+          value: "-o"       
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+    - name: docker-build
+      taskRef:
+        name: kaniko
+      runAfter:
+        - build
+      params:
+        - name: IMAGE
+          value: repo.cicc.com.cn/fi-fiops-docker-local/devops/bkcmdb:$(tasks.build.results.version)-$(tasks.build.results.timestamp)-$(tasks.git-clone.results.commit)
+        - name: CONTEXT
+          value: bkcmdb/api
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+        - name: dockerconfig
+          workspace: dockerhub-auth
+    - name: deploy
+      taskRef:
+        name: k8s-deploy
+      runAfter:
+        - docker-build
+      params:
+        - name: image-url
+          value: $(tasks.docker-build.results.IMAGE_URL)
+

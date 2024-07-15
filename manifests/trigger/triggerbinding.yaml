@@ -1,0 +1,12 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerBinding
+metadata:
+  name: fi-trigger-bingding
+spec:
+  params:
+    - name: gitrevision
+      value: $(body.ref)
+    - name: namespace
+      value: default
+    - name: gitrepositoryurl
+      value: $(body.project.git_ssh_url)

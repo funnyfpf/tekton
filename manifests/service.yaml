@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"triggers.tekton.dev/v1beta1","kind":"EventListener","metadata":{"annotations":{},"name":"trigger-rd-pipeline-eventlistener","namespace":"default"},"spec":{"serviceAccountName":"tekton-triggers-gitlab-sa","triggers":[{"bindings":[{"ref":"trigger-rd-pipeline-bingding"}],"template":{"ref":"trigger-rd-pipeline-template"}}]}}
+  creationTimestamp: "2024-02-20T10:05:23Z"
+  labels:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: trigger-rd-pipeline-eventlistener
+  name: eventlistener
+  namespace: default
+  ownerReferences:
+  - apiVersion: triggers.tekton.dev/v1beta1
+    blockOwnerDeletion: true
+    controller: true
+    kind: EventListener
+    name: trigger-rd-pipeline-eventlistener
+    uid: 59c0b075-05f6-4071-b5e7-f5500610fe86
+  resourceVersion: "3483523"
+  uid: 4fc3c557-9df9-4c79-8138-db4438fb5361
+spec:
+  internalTrafficPolicy: Cluster
+  ipFamilies:
+  - IPv4
+  ipFamilyPolicy: SingleStack
+  ports:
+  - name: http-listener
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  - name: http-metrics
+    port: 9000
+    protocol: TCP
+    targetPort: 9000
+  selector:
+    app.kubernetes.io/managed-by: EventListener
+    app.kubernetes.io/part-of: Triggers
+    eventlistener: trigger-rd-pipeline-eventlistener
+  sessionAffinity: None
+  type: NodePort
+status:
+  loadBalancer: {}

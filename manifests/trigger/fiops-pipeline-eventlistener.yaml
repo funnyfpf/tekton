@@ -1,0 +1,15 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: EventListener
+metadata:
+  name: fiops-pipeline-eventlistener
+  namespace: default
+spec:
+  namespaceSelector: {}
+  resources: {}
+  serviceAccountName: tekton-triggers-gitlab-sa
+  triggers:
+    - bindings:
+        - kind: TriggerBinding
+          ref: fiops-trigger-binding
+      template:
+        ref: fiops-pipeline-template

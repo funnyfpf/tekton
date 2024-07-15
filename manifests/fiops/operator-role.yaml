@@ -1,0 +1,45 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  annotations:
+    kubesphere.io/creator: system
+  creationTimestamp: "2021-11-30T08:55:26Z"
+  name: operator
+  namespace: default
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  - apps
+  - extensions
+  - batch
+  - logging.kubesphere.io
+  - monitoring.kubesphere.io
+  - monitoring.coreos.com
+  - metering.kubesphere.io
+  - notification.kubesphere.io
+  - autoscaling
+  - alerting.kubesphere.io
+  - openpitrix.io
+  - app.k8s.io
+  - servicemesh.kubesphere.io
+  - operations.kubesphere.io
+  - devops.kubesphere.io
+  - resources.kubesphere.io
+  - config.istio.io
+  - events.k8s.io
+  - events.kubesphere.io
+  - snapshot.storage.k8s.io
+  - monitoring.coreos.com
+  resources:
+  - '*'
+  verbs:
+  - '*'
+
