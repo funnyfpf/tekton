@@ -17,7 +17,7 @@ spec:
         #   - name: source
         steps:
           - name: print
-            image: repo.cicc.com.cn/public-docker-virtual/bash:5.1.4@sha256:b208215a4655538be652b2769d82e576bc4d0a2bb132144c060efc5be8c3f5d6
+            image: registry.cn-beijing.aliyuncs.com/fpf_devops/bash:5.1.4
             script: |
               #!/usr/bin/env bash
               set -e
@@ -90,7 +90,7 @@ spec:
         - build
       params:
         - name: IMAGE
-          value: repo.cicc.com.cn/fi-fiops-docker-local/devops/bkcmdb:$(tasks.build.results.version)-$(tasks.build.results.timestamp)-$(tasks.git-clone.results.commit)
+          value: registry.cn-beijing.aliyuncs/fpf_devops/bkcmdb:$(tasks.build.results.version)-$(tasks.build.results.timestamp)-$(tasks.git-clone.results.commit)
         - name: CONTEXT
           value: bkcmdb/api
       workspaces:

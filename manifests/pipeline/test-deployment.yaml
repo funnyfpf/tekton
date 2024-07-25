@@ -9,7 +9,7 @@ spec:
   params:
   - name: revision
     type: string
-  - default: git@gitlab.cicconline.com:xficc/devops/fiops.git
+  - default: git@github.com:funnyfpf/tekton.git
     name: repo-url
     type: string
   tasks:
@@ -50,7 +50,7 @@ spec:
   - name: docker-build
     params:
     - name: IMAGE
-      value: repo.cicc.com.cn/fi-fiops-docker-local/devops/k8s:$(tasks.build.results.version)-$(tasks.build.results.timestamp)-$(tasks.git-clone.results.commit)
+      value: registry.cn-beijing.aliyuncs.com/fpf_devops/k8s:$(tasks.build.results.version)-$(tasks.build.results.timestamp)-$(tasks.git-clone.results.commit)
     - name: CONTEXT
       value: k8s/api
     runAfter:

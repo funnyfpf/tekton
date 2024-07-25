@@ -31,13 +31,13 @@ spec:
  #         runAsUser: 0
   params:
     - name: repo-url
-      value: git@gitlab.cicconline.com:xficc/taichi/ofa.git
+      value: git@github.com:funnyfpf/tekton.git
     - name: revision
       value: sprint54
     - name: workbase
-      value: "service/auth/auth-http-server"
+      value: "service/auth"
     - name: context
-      value: "service/auth/auth-http-server"
+      value: "service/auth"
    
   # taskRunSpecs:
   #   - pipelineTaskName: go-build

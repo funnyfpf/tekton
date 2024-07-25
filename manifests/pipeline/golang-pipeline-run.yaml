@@ -31,7 +31,7 @@ spec:
  #         runAsUser: 0
   params:
     - name: repo-url
-      value: git@gitlab.cicconline.com:hongyuxuan/godemo.git
+      value: git@github.com:funnyfpf/tekton.git
     - name: revision
       value: dev
     - name: workbase

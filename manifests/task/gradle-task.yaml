@@ -24,7 +24,7 @@ spec:
     - name: GRADLE_IMAGE
       description: Gradle base image.
       type: string
-      default: repo.cicc.com.cn/public-docker-virtual/gradle:7.4.2-jdk11
+      default: registry.cn-beijing.aliyuncs.com/fpf_devops//gradle:7.4.2-jdk11
     - name: PROJECT_DIR
       description: The directory containing build.gradle
       type: string

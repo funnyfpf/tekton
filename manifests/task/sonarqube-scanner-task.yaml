@@ -65,7 +65,7 @@ spec:
         path: /usr/share/nginx/html/reports
   steps:
     - name: sonar-properties-create
-      image: repo.cicc.com.cn/public-docker-virtual/upkar/ubi-minimal:8.6-994
+      image: registry.cn-beijing.aliyuncs.com/fpf_devops/ubi-minimal:8.6-994
       workingDir: $(workspaces.source.path)
       env:
         - name: SONAR_HOST_URL
@@ -172,7 +172,7 @@ spec:
       command:
         - sonar-scanner
     - name: write-report-url
-      image: repo.cicc.com.cn/public-docker-virtual/bash:5.1.4@sha256:c523c636b722339f41b6a431b44588ab2f762c5de5ec3bd7964420ff982fb1d9
+      image: registry.cn-beijing.aliyuncs.com/fpf_devops/bash:5.1.4
       script: |
         set -e
         mkdir /tmp/$(params.PIPELINE_RUN_NAME)

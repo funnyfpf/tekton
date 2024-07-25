@@ -33,7 +33,7 @@ spec:
       default:
         - "help"
     - name: image
-      default: repo.cicc.com.cn/public-docker-virtual/cloud-builders/kubectl@sha256:8ab94be8b2b4f3d117f02d868b39540fddd225447abf4014f7ba4765cb39f753 #image is huge
+      default: regsitry.cn-beijing.aliyuncs.com/fpf_devops/kubectl:latest
       description: Kubectl wrapper image
     - name: image_url
       type: string

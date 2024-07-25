@@ -47,7 +47,7 @@ spec:
     description: "Go checksum database url. Use value 'off' to disable checksum validation."
     default: ""
   - name: GOPROXY
-    default: "https://repo.cicc.com.cn/artifactory/public-go-virtual/"
+    default: "https://goproxy.cn,direct"
   workspaces:
   - name: source
   results:
@@ -55,7 +55,7 @@ spec:
     - name: timestamp
   steps:
   - name: build
-    image: repo.cicc.com.cn/public-docker-virtual/golang:1.22-rc
+    image: registry.cn-beijing.aliyuncs.com/fpf_devops/golang:1.22-rc
     workingDir: $(workspaces.source.path)
     script: |
       go version

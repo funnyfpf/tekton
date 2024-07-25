@@ -57,7 +57,7 @@ spec:
         - go-build
       params:
         - name: IMAGE
-          value: repo.cicc.com.cn/fi-fiops-docker-local/godemo/dev:$(tasks.go-build.results.version)-$(tasks.fetch-repository.results.committer-date)-$(tasks.fetch-repository.results.commit)
+          value: registry.cn-beijing.aliyuncs.com/fpf_devops/godemo:$(tasks.go-build.results.version)-$(tasks.fetch-repository.results.committer-date)-$(tasks.fetch-repository.results.commit)
       workspaces:
         - name: source
           workspace: shared-workspace

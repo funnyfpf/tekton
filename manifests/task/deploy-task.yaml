@@ -17,13 +17,12 @@ spec:
   - name: url
     description: URL to curl'ed
     type: string
-    default: "http://fiops-deploy.ficc-ofa-dev.cicc.io/deploy/kubernetes"
   - name: image-url
     type: string
   - name: curl-image
     description: option of curl image
     type: string
-    default: "repo.cicc.com.cn/public-docker-virtual/curlimages/curl:7.72.0@sha256:bd5bbd35f89b867c1dccbc84b8be52f3f74dea20b46c5fe0db3780e040afcb6f" #tag: 7.72.0
+    default: "registry.cn-beijing.aliyuncs.com/fpf_devops/curlimages/curl:7.72.0@sha256:bd5bbd35f89b867c1dccbc84b8be52f3f74dea20b46c5fe0db3780e040afcb6f" #tag: 7.72.0
   steps:
   - name: curl
     image: "$(params.curl-image)"

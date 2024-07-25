@@ -15,7 +15,7 @@ metadata:
   resourceVersion: "14751909"
 spec:
   params:
-  - default: repo.cicc.com.cn/fi-public-docker-local/jfrog/jfrogcli:2.2.0
+  - default: registry.cn-beijing.aliyuncs.com/fpf_devops/jfrogcli:2.2.0
     description: tkn CLI container image to run this task
     name: JFROG_IMAGE
     type: string
@@ -44,7 +44,7 @@ spec:
       tarname=$(ls *.gz)
       for i in $tarname
       do
-        jfrog rt u ${i}  fi-fiops-generic-local/lizardcd/$(params.version)
+        jfrog rt u ${i}  devops-repo/$(params.version)
       done
     securityContext:
       runAsUser: 0
